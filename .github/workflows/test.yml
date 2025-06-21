@@ -6,8 +6,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install requests
+        run: pip install requests
+      - name: Fetch top 3 Hackernews stories
+        run: python .github/scripts/fetch_hn.py
+      - name: Read HN news
+        id: hn_news
+        run: |
+          echo "news=$(cat hn_top3.txt | sed ':a;N;$!ba;s/\n/\\n/g')" >> $GITHUB_OUTPUT
       - name: send custom message
         uses: appleboy/discord-action@v1.2.0
         with:
           webhook_url: ${{ secrets.WEBHOOK_URL }}
-          message: The ${{ github.event_name }} event triggered first step.
+          message: |
+            The ${{ github.event_name }} event triggered first step.\nTop 3 Hackernews stories:\n${{ steps.hn_news.outputs.news }}
